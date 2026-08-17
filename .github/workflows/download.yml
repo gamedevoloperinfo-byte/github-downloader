@@ -44,7 +44,7 @@ jobs:
 
       - name: Configure yt-dlp
         run: |
-          mkdir -p ~/.config/yt-dlp && echo '--remote-components ejs:github' > ~/.config/yt-dlp/config && echo '--extractor-args youtube:player_client=default,android,tv,mweb' >> ~/.config/yt-dlp/config
+          mkdir -p ~/.config/yt-dlp && echo '--remote-components ejs:github' > ~/.config/yt-dlp/config && echo '--no-simulate' >> ~/.config/yt-dlp/config && echo '--extractor-args youtube:player_client=default,android,tv,mweb' >> ~/.config/yt-dlp/config
 
       - name: Diagnose yt-dlp
         run: |
