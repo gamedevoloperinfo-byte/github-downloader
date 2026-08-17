@@ -33,8 +33,18 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-          cache: "pip"
 
+      - name: Install yt-dlp
+        run: pip install --quiet --upgrade yt-dlp
+
+      - name: Run downloader
+        env:
+          VIDEO_URL: ${{ inputs.url || github.event.client_payload.url || '' }}
+          PLATFORM: ${{ inputs.platform || github.event.client_payload.platform || '' }}
+          REQUEST_ID: ${{ inputs.requestId || github.event.client_payload.requestId || '' }}
+          CALLBACK_URL: ${{ inputs.callbackUrl || github.event.client_payload.callbackUrl || secrets.CALLBACK_URL || '' }}
+          CALLBACK_SECRET: ${{ secrets.CALLBACK_SECRET || '' }}
+        run: python scripts/download_video.py
       - name: Install yt-dlp
         run: pip install --quiet --upgrade yt-dlp
 
