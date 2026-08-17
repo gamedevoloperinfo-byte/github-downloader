@@ -11,6 +11,7 @@ Manual runs without REQUEST_ID just print the result to the logs.
 
 import json
 import os
+import re
 import subprocess
 import sys
 import urllib.request
@@ -56,11 +57,36 @@ def curl_upload(args: list[str], timeout: int) -> str:
         capture_output=True,
         text=True,
     )
-    link = (proc.stdout or "").strip()
-    if link.startswith("http://") or link.startswith("https://"):
-        return link
-    print(f"upload attempt failed: {proc.stderr or proc.stdout}", file=sys.stderr)
+    text = (proc.stdout or "").strip()
+    # Some hosts return JSON, e.g. tmpfiles.org:
+    #   {"status":"success","data":{"url":"https://tmpfiles.org/XXXX/file.mp4"}}
+    if text.startswith("{"):
+        try:
+            data = json.loads(text)
+            url = (data.get("data") or {}).get("url")
+            if url:
+                return str(url)
+        except Exception:
+            pass
+    if text.startswith("http://") or text.startswith("https://"):
+        return text
+    print(f"upload attempt failed: {text or proc.stderr}", file=sys.stderr)
     return ""
+
+
+def resolve_tmpfiles(view_url: str) -> str:
+    """tmpfiles.org returns a view page URL; the real download link is on
+    the page as https://tmpfiles.org/dl/<timestamp>/<id>/<file>."""
+    try:
+        req = urllib.request.Request(view_url, headers={"User-Agent": "vidgrab"})
+        with urllib.request.urlopen(req, timeout=60) as resp:
+            html = resp.read().decode("utf-8", errors="replace")
+        m = re.search(r'https://tmpfiles\.org/dl/[^"\'<> ]+', html)
+        if m:
+            return m.group(0)
+    except Exception as exc:
+        print(f"tmpfiles resolve failed: {exc}", file=sys.stderr)
+    return view_url
 
 
 def upload_file(filepath: str) -> str:
@@ -87,6 +113,8 @@ def upload_file(filepath: str) -> str:
         ["-F", f"file=@{filepath}", "-F", "expires=72h", "https://tmpfiles.org/api/v1/upload"],
         1200,
     )
+    if link and "tmpfiles.org" in link:
+        return resolve_tmpfiles(link)
     if link:
         return link
     return ""
@@ -149,7 +177,7 @@ def main() -> None:
             {
                 "requestId": REQUEST_ID,
                 "status": "failed",
-                "error": "Dosya paylaşım servisine yüklenemedi (boyut limiti aşılmış olabilir).",
+                "error": "Dosya paylaşım servisine yüklenemedi (boyut limiti aşılabilir).",
             }
         )
         sys.exit(1)
