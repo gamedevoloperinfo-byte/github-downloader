@@ -39,11 +39,12 @@ jobs:
         with:
           deno-version: v2.x
 
+      - name: Install yt-dlp
+        run: pip install --quiet --upgrade yt-dlp
+
       - name: Configure yt-dlp
-        run: 
-          mkdir -p ~/.config/yt-dlp
-          echo '--remote-components ejs:github' > ~/.config/yt-dlp/config
-          echo '--extractor-args youtube:player_client=default,android,tv,mweb' >> ~/.config/yt-dlp/config
+        run: |
+          mkdir -p ~/.config/yt-dlp && echo '--remote-components ejs:github' > ~/.config/yt-dlp/config && echo '--extractor-args youtube:player_client=default,android,tv,mweb' >> ~/.config/yt-dlp/config
 
       - name: Run downloader
         env:
