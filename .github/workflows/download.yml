@@ -46,6 +46,17 @@ jobs:
         run: |
           mkdir -p ~/.config/yt-dlp && echo '--remote-components ejs:github' > ~/.config/yt-dlp/config && echo '--extractor-args youtube:player_client=default,android,tv,mweb' >> ~/.config/yt-dlp/config
 
+      - name: Diagnose yt-dlp
+        run: |
+          echo "== yt-dlp version =="
+          yt-dlp --version
+          echo "== config =="
+          cat ~/.config/yt-dlp/config
+          echo "== verbose extraction =="
+          yt-dlp -v --no-playlist --skip-download --print "%(title)s|%(format_id)s" "$VIDEO_URL" 2>&1 | tail -50
+        env:
+          VIDEO_URL: ${{ inputs.url || github.event.client_payload.url || '' }}
+
       - name: Run downloader
         env:
           VIDEO_URL: ${{ github.event.client_payload.url || inputs.url || '' }}
