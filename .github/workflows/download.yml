@@ -17,6 +17,10 @@ on:
         description: "Request ID (optional)"
         required: false
         type: string
+      callbackUrl:
+        description: "Callback URL (optional)"
+        required: false
+        type: string
 
 jobs:
   download:
@@ -36,9 +40,9 @@ jobs:
 
       - name: Run downloader
         env:
-          VIDEO_URL: ${{ github.event.client_payload.url || inputs.url || '' }}
-          PLATFORM: ${{ github.event.client_payload.platform || inputs.platform || '' }}
-          REQUEST_ID: ${{ github.event.client_payload.requestId || inputs.requestId || '' }}
-          CALLBACK_URL: ${{ github.event.client_payload.callbackUrl || secrets.CALLBACK_URL || '' }}
+          VIDEO_URL: ${{ inputs.url || github.event.client_payload.url || '' }}
+          PLATFORM: ${{ inputs.platform || github.event.client_payload.platform || '' }}
+          REQUEST_ID: ${{ inputs.requestId || github.event.client_payload.requestId || '' }}
+          CALLBACK_URL: ${{ inputs.callbackUrl || github.event.client_payload.callbackUrl || secrets.CALLBACK_URL || '' }}
           CALLBACK_SECRET: ${{ secrets.CALLBACK_SECRET || '' }}
         run: python scripts/download_video.py
