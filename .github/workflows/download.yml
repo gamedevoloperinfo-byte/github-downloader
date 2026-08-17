@@ -1,5 +1,5 @@
 name: Video Downloader
- 
+
 on:
   repository_dispatch:
     types: [video-download]
@@ -17,27 +17,28 @@ on:
         description: "Request ID (optional)"
         required: false
         type: string
- 
+
 jobs:
   download:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
- 
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
           cache: "pip"
- 
+
       - name: Install yt-dlp
         run: pip install --quiet --upgrade yt-dlp
- 
+
       - name: Run downloader
         env:
           VIDEO_URL: ${{ github.event.client_payload.url || inputs.url || '' }}
           PLATFORM: ${{ github.event.client_payload.platform || inputs.platform || '' }}
           REQUEST_ID: ${{ github.event.client_payload.requestId || inputs.requestId || '' }}
           CALLBACK_URL: ${{ github.event.client_payload.callbackUrl || secrets.CALLBACK_URL || '' }}
-          CALLBACK_SECRET:
+          CALLBACK_SECRET: ${{ secrets.CALLBACK_SECRET || '' }}
+        run: python scripts/download_video.py
